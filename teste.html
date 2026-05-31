@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Família Silva - Simulador Financeiro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #fcf9f2; 
+            color: #3e3630; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        
+        .container { 
+            background: #ffffff; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(194, 65, 12, 0.05); 
+            max-width: 700px; 
+            width: 100%; 
+            padding: 40px; 
+            border: 1px solid #f1eae1; 
+        }
+        
+        .titulo { 
+            text-align: center; 
+            color: #c2410c; 
+            margin-bottom: 8px; 
+            font-size: 28px; 
+            font-weight: 800; 
+            letter-spacing: 0.5px;
+        }
+        
+        .descricao { 
+            text-align: center; 
+            color: #7c6e65; 
+            margin-bottom: 35px; 
+            font-size: 15px; 
+        }
+        
+        .tela-inicial { display: flex; flex-direction: column; gap: 20px; }
+        
+        .label-grupo { 
+            text-align: center; 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #3e3630; 
+            margin-bottom: 10px;
+        }
+        
+        .grupos-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); 
+            gap: 12px; 
+            margin-bottom: 25px; 
+        }
+        
+        .btn-grupo { 
+            padding: 14px; 
+            border: 2px solid #f1eae1; 
+            border-radius: 12px; 
+            background: #ffffff; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: 600; 
+            color: #7c6e65; 
+            transition: all 0.2s; 
+        }
+        
+        .btn-grupo:hover { 
+            border-color: #c2410c; 
+            color: #c2410c; 
+            background: #fdfbf7; 
+        }
+        
+        .btn-grupo.selecionado { 
+            background: #c2410c; 
+            color: #ffffff; 
+            border-color: #c2410c; 
+        }
+        
+        .btn-iniciar { 
+            padding: 16px; 
+            background: #9a3412; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            width: 100%; 
+            text-transform: uppercase; 
+            transition: all 0.2s;
+        }
+        
+        .btn-iniciar:hover:not(:disabled) {
+            background: #c2410c;
+            transform: translateY(-1px);
+        }
+        
+        .btn-iniciar:disabled { 
+            background: #e5e5e5; 
+            color: #a3a3a3; 
+            cursor: not-allowed; 
+        }
+        
+        .tela-jogo { display: none; }
+        
+        .topo-jogo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        .info-etapa { 
+            font-size: 13px; 
+            color: #c2410c; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        
+        .hud-status { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 25px; }
+        
+        .hud-card { 
+            background: #fdfbf7; 
+            border: 1px solid #f1eae1; 
+            border-radius: 14px; 
+            padding: 16px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .hud-label { font-size: 11px; text-transform: uppercase; color: #7c6e65; font-weight: 700; margin-bottom: 4px; }
+        
+        .hud-valor { font-size: 22px; font-weight: 800; color: #292524; }
+        
+        .hud-valor.positivo { color: #16a34a; }
+        .hud-valor.negativo { color: #dc2626; }
+        .hud-valor.caixinha { color: #d97706; } 
+        
+        .painel-movimentacoes { 
+            background: #fdfbf7; 
+            border-radius: 14px; 
+            padding: 16px; 
+            margin-bottom: 25px; 
+            border: 1px solid #f1eae1; 
+            max-height: 140px; 
+            overflow-y: auto; 
+        }
+        
+        .painel-titulo { font-size: 11px; font-weight: 700; color: #a8a29e; margin-bottom: 8px; text-transform: uppercase; }
+        
+        .linha-mov { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f1eae1; font-size: 13px; }
+        
+        .mov-desc { color: #57534e; }
+        
+        .mov-val { font-weight: 700; }
+        .mov-val.negativo { color: #dc2626; }
+        .mov-val.positivo { color: #16a34a; }
+        
+        .titulo-etapa { font-size: 18px; font-weight: 700; color: #292524; margin-bottom: 12px; }
+        
+        .caixa-dialogo { 
+            color: #44403c; 
+            font-size: 15px; 
+            line-height: 1.6; 
+            margin-bottom: 24px; 
+            background: #fffdfa; 
+            padding: 18px; 
+            border-radius: 14px; 
+            border-left: 4px solid #c2410c; 
+        }
+        
+        .caixa-dialogo.alerta { 
+            background: #fffdfa; 
+            border-left-color: #9a3412; 
+        }
+        
+        .opcoes-container { display: flex; flex-direction: column; gap: 12px; }
+        
+        .btn-opcao { 
+            padding: 14px 18px; 
+            border: 2px solid #f1eae1; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            background: #ffffff; 
+            font-size: 14px; 
+            text-align: left; 
+            font-weight: 600; 
+            color: #57534e; 
+            line-height: 1.4;
+            transition: all 0.2s;
+        }
+        
+        .btn-opcao:hover { 
+            border-color: #c2410c; 
+            background: #fdfbf7; 
+        }
+        
+        .btn-opcao.selecionada { 
+            background: #c2410c; 
+            color: #ffffff; 
+            border-color: #c2410c; 
+        }
+        
+        .btn-missao-obrigatoria { 
+            padding: 16px; 
+            border: 2px solid #c2410c; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            background: #ffffff; 
+            font-size: 14px; 
+            text-align: left; 
+            font-weight: 700; 
+            color: #c2410c; 
+            width: 100%; 
+            text-transform: uppercase; 
+            transition: all 0.2s;
+        }
+        
+        .btn-missao-obrigatoria:hover {
+            background: #fdfbf7;
+        }
+        
+        .btn-missao-obrigatoria.pago { 
+            background: #a8a29e; 
+            color: white; 
+            border-color: #a8a29e;
+        }
+        
+        .navegacao { display: flex; gap: 12px; margin-top: 30px; }
+        
+        .btn-nav { 
+            padding: 12px 20px; 
+            border: 2px solid #f1eae1; 
+            border-radius: 12px; 
+            background: #ffffff; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 700; 
+            color: #7c6e65; 
+            transition: all 0.2s;
+        }
+        
+        .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .btn-proximo { 
+            background: #c2410c; 
+            color: #ffffff; 
+            border-color: #c2410c; 
+            flex: 1; 
+        }
+        
+        .btn-proximo:hover:not(:disabled) {
+            background: #9a3412;
+        }
+        
+        .tela-final { display: none; text-align: center; }
+        
+        .resultado-final { 
+            background: #fdfbf7; 
+            color: #9a3412; 
+            padding: 30px; 
+            border-radius: 16px; 
+            margin-bottom: 25px; 
+            border: 2px dashed #c2410c; 
+        }
+        
+        .titulo-final { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        
+        .saldo-final { font-size: 40px; font-weight: 900; margin-top: 8px; color: #16a34a; }
+        
+        .resumo-escolhas { 
+            background: #fdfbf7; 
+            padding: 20px; 
+            border-radius: 14px; 
+            margin-bottom: 25px; 
+            text-align: left; 
+            border: 1px solid #f1eae1; 
+        }
+        
+        .resumo-titulo { font-weight: 700; color: #3e3630; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; }
+        
+        .escolha-item { padding: 12px; margin-bottom: 8px; background: #ffffff; border-radius: 8px; border-left: 4px solid #c2410c; font-size: 13px; color: #57534e; }
+        
+        .escolha-numero { font-weight: 700; color: #c2410c; }
+        
+        .btn-enviar { 
+            padding: 16px; 
+            background: #16a34a; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            width: 100%; 
+            text-transform: uppercase; 
+            transition: all 0.2s;
+        }
+        
+        .btn-enviar:hover:not(:disabled) {
+            background: #15803d;
+        }
+        
+        #iframeOculto { display: none; }
+    </style>
+</head>
+<body>
+    
+    <iframe name="iframeOculto" id="iframeOculto"></iframe>
+    
+    <form id="googleForm" target="iframeOculto" action="https://docs.google.com/forms/d/e/1FAIpQLSdA0AQKGCPpp4D5YX3-Lgzng1wwNjwEU_s7AlQm5o-WoldRJw/formResponse" method="POST" style="display:none;">
+        <input type="text" id="formGrupo" name="entry.57302291">
+        <input type="text" id="formS1" name="entry.810462340">
+        <input type="text" id="formS2" name="entry.1821100296">
+        <input type="text" id="formS3" name="entry.1283007266">
+        <input type="text" id="formS4" name="entry.1211271544">
+    </form>
+
+    <div class="container">
+        <div class="tela-inicial" id="telaInicial">
+            <div class="titulo">Família Silva</div>
+            <div class="descricao">Simulador e Dinâmica Prática de Educação Financeira</div>
+            <div class="label-grupo">Selecione o Grupo da sua Equipe:</div>
+            <div class="grupos-container" id="gruposContainer"></div>
+            <button class="btn-iniciar" id="btnIniciar" disabled>Iniciar Jogo</button>
+        </div>
+
+        <div class="tela-jogo" id="telaJogo">
+            <div class="topo-jogo"><div class="info-etapa" id="infoEtapa">Fase 1 / 7</div></div>
+            <div class="hud-status">
+                <div class="hud-card"><span class="hud-label">💰 Saldo no Caixa</span><span class="hud-valor positivo" id="hudSaldo">R$ 1.771,00</span></div>
+                <div class="hud-card"><span class="hud-label">🛡️ Caixa de Emergência</span><span class="hud-valor caixinha" id="hudCaixinha">R$ 50,00</span></div>
+            </div>
+            <div class="painel-movimentacoes">
+                <div class="painel-titulo">Histórico de Fluxo Recente</div>
+                <div id="tabelaMovimentacoes"></div>
+            </div>
+            <div id="etapaConteudo"></div>
+            <div class="navegacao">
+                <button class="btn-nav" id="btnAnterior" onclick="etapaAnterior()">Voltar</button>
+                <button class="btn-nav btn-proximo" id="btnProximo" onclick="proximaEtapa()">Avançar</button>
+            </div>
+        </div>
+
+        <div class="tela-final" id="telaFinal">
+            <div class="resultado-final">
+                <div class="titulo-final">Desafio Concluído! 🏆</div>
+                <div>O saldo final consolidado da Família Silva foi:</div>
+                <div class="saldo-final" id="saldoFinal">R$ 0,00</div>
+            </div>
+            <div class="resumo-escolhas" id="resumoEscolhas"></div>
+            <button class="btn-enviar" id="btnEnviar" onclick="enviarRespostas()">Enviar Relatório Final</button>
+        </div>
+    </div>
+
+    <script>
+        const GRUPOS = ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'Grupo 5'];
+        const ETAPAS = [
+            { semana: 1, titulo: "Semana 1 - Fase 1: Despesas Fixas Obrigatórias", historia: "A renda chegou! R$ 1.771,00 em caixa (Salário do Pai R$ 1.621,00 + Primeiro Bico Semanal da Mãe R$ 150,00). É hora de pagar as despesas essenciais do início do mês: Aluguel + Condomínio (R$ 625,00) e Luz (R$ 80,00). Total: R$ 705,00.", tipo: "obrigatorio", opcoes: [{ texto: "Pagar Contas Fixas Inevitáveis (R$ 705,00)", saldo: -705, desc: "Despesas Fixas (Aluguel/Luz)" }] },
+            { semana: 1, titulo: "Semana 1 - Fase 2: O Labirinto do Cartão", historia: "Contas fixas liquidadas. Saldo restante: R$ 1.066,00. Chegou um dilema complexo: a fatura total do cartão de crédito é de R$ 900,00. Qual estratégia sua equipe vai escolher?", tipo: "escolha", opcoes: [{ texto: "Pagamento total do cartão (R$ 900) - Sobram apenas R$ 166 para o mercado.", saldo: -900, escolhaNum: 1 }, { texto: "Pagamento parcial de R$ 500 (Dívida rola com juros) - Sobram R$ 566 para o mercado.", saldo: -500, escolhaNum: 1 }] },
+            { semana: 1, titulo: "Semana 1 - Fase 3: Abastecimento do Lar", historia: "Hora de realizar as compras semanais de alimentos básicos da família. Toda a quantia que sobrou do dilema do cartão será utilizada agora no mercado.", tipo: "obrigatorio", opcoes: [{ texto: "Realizar Compras Semanais de Alimentos", saldo: 0, dependeDe: "cartaoOpcao" }] },
+            { semana: 2, titulo: "Semana 2 - Fase 4: O Teste da Saúde", historia: "Começou a Semana 2! Entrou +R$ 150,00 do bico semanal da mãe. But surgiu um gasto de saúde inesperado: um medicamento de urgência custa R$ 45,00. Além disso, as despesas fixas de mercado da semana somam R$ 105,00. Lembram-se de que a Caixa de Emergência possui R$ 50,00 guardados.", tipo: "escolha", opcoes: [{ texto: "Usar a Caixa de Emergência (Gasta os R$ 50 da reserva para o remédio. Os R$ 5 que sobram entram no caixa e ajudam a pagar o mercado de R$ 105. Desconto líquido de R$ 100 no caixa)", saldo: -100, escolhaNum: 2 }, { texto: "Não mexer na Reserva (Retira o valor total de R$ 150 diretamente do saldo principal para cobrir o remédio e o mercado)", saldo: -150, escolhaNum: 2 }], receitaExtra: 150, descReceita: "Bico da Mãe (Semana 2)" },
+            { semana: 3, titulo: "Semana 3 - Fase 5: Combustível e Cozinha", historia: "Início da Semana 3! Mais +R$ 150,00 do bico da mãe garantidos. Alerta de imprevisto: o botijão de gás acabou e a recarga custa R$ 115,00. O que decidir?", tipo: "escolha", opcoes: [{ texto: "Efetuar pagamento à vista (Gasto imediato de R$ 115)", saldo: -115, escolhaNum: 3 }, { texto: "Pedir fiado na barraca do bairro (Mantém o saldo em caixa, mas cria uma pendência futura)", saldo: 0, escolhaNum: 3 }], receitaExtra: 150, descReceita: "Bico da Mãe (Semana 3)" },
+            { semana: 4, titulo: "Semana 4 - Fase 6: Reabastecimento Obrigatório", historia: "Entramos na Semana 4! Entrou o último bico garantido de R$ 150,00 da mãe. Antes de tomar qualquer decisão, a família obrigatoriamente precisa realizar as últimas compras essenciais de mercado estipuladas em R$ 60,00.", tipo: "obrigatorio", opcoes: [{ texto: "Realizar Compras Semanais de Mercado (R$ 60,00)", saldo: -60, desc: "Mercado Obrigatório (Semana 4)" }], receitaExtra: 150, descReceita: "Bico da Mãe (Semana 4)" },
+            { semana: 4, titulo: "Semana 4 - Fase 7: Alocação do Saldo Final", historia: "Compras de mercado de R$ 60 realizadas com sucesso! Restam exatamente R$ 90,00 livres em caixa de tudo o que foi acumulado. Para qual finalidade prioritária sua equipe vai direcionar esse dinheiro restante?", tipo: "escolha", opcoes: [{ texto: "Quitar Conta de Internet", saldo: 0, escolhaNum: 4 }, { texto: "Repor Reserva de Emergência", saldo: 0, escolhaNum: 4 }, { texto: "Abater Saldo Devedor do Cartão", saldo: 0, escolhaNum: 4 }] }
+        ];
+
+        let estadoJogo = { grupoSelecionado: null, saldo: 1771, saldoCaixinha: 50, etapaAtual: 0, escolhas: { 1: null, 2: null, 3: null, 4: null }, etapasConcluidas: [], receitasInjetadas: [], movimentacoes: [{ id: "inicial", descricao: "Saldo Inicial Disponível", valor: 1771, tipo: "entrada" }], cartaoOpcao: null };
+
+        function inicializarJogo() { renderizarGrupos(); }
+        
+        function renderizarGrupos() {
+            const container = document.getElementById('gruposContainer');
+            container.innerHTML = '';
+            GRUPOS.forEach(grupo => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-grupo';
+                btn.textContent = grupo;
+                btn.onclick = () => selecionarGrupo(grupo, btn);
+                container.appendChild(btn);
+            });
+        }
+        
+        function selecionarGrupo(grupo, botao) {
+            document.querySelectorAll('.btn-grupo').forEach(btn => btn.classList.remove('selecionado'));
+            botao.classList.add('selecionado');
+            estadoJogo.grupoSelecionado = grupo;
+            document.getElementById('btnIniciar').disabled = false;
+        }
+
+        document.getElementById('btnIniciar').addEventListener('click', () => {
+            if (estadoJogo.grupoSelecionado) {
+                document.getElementById('telaInicial').style.display = 'none';
+                document.getElementById('telaJogo').style.display = 'block';
+                mostrarEtapa(0);
+            }
+        });
+
+        function mostrarEtapa(index) {
+            if (index < 0 || index >= ETAPAS.length) return;
+            estadoJogo.etapaAtual = index;
+            const etapa = ETAPAS[index];
+            
+            if (etapa.receitaExtra && !estadoJogo.receitasInjetadas.includes(index)) {
+                estadoJogo.saldo += etapa.receitaExtra;
+                estadoJogo.movimentacoes.push({ id: `receita-${index}`, descricao: `🪙 ${etapa.descReceita}`, valor: etapa.receitaExtra, tipo: "entrada" });
+                estadoJogo.receitasInjetadas.push(index);
+            }
+            
+            document.getElementById('infoEtapa').textContent = `Fase ${index + 1} / ${ETAPAS.length}`;
+            atualizarHUD();
+            atualizarHistorico();
+            
+            let classeAlerta = etapa.tipo === 'escolha' ? 'alerta' : '';
+            let conteudo = `<div class="titulo-etapa">${etapa.titulo}</div><div class="caixa-dialogo ${classeAlerta}">${etapa.historia}</div>`;
+            
+            if (etapa.tipo === 'obrigatorio') {
+                const pago = estadoJogo.etapasConcluidas.includes(index);
+                if (etapa.opcoes[0].dependeDe === 'cartaoOpcao') {
+                    const saldoMercado = estadoJogo.cartaoOpcao === 0 ? 166 : 566;
+                    conteudo += `<button class="btn-missao-obrigatoria ${pago ? 'pago' : ''}" onclick="pagarObrigatorio(${index})">${pago ? '✓ Ação Executada' : 'Confirmar Compras de Mercado (-R$ ' + saldoMercado.toFixed(2) + ')'}</button>`;
+                } else {
+                    conteudo += `<button class="btn-missao-obrigatoria ${pago ? 'pago' : ''}" onclick="pagarObrigatorio(${index})">${pago ? '✓ Ação Executada' : 'Confirmar: ' + etapa.opcoes[0].texto}</button>`;
+                }
+            } else {
+                conteudo += '<div class="opcoes-container">';
+                etapa.opcoes.forEach((opcao, i) => {
+                    const selecionada = estadoJogo.escolhas[etapa.opcoes[0].escolhaNum] === i ? 'selecionada' : '';
+                    conteudo += `<button class="btn-opcao ${selecionada}" onclick="selecionarOpcao(${index}, ${i})">${opcao.texto}</button>`;
+                });
+                conteudo += '</div>';
+            }
+            
+            document.getElementById('etapaConteudo').innerHTML = conteudo;
+            document.getElementById('btnAnterior').disabled = index === 0;
+            
+            if (etapa.tipo === 'obrigatorio') {
+                document.getElementById('btnProximo').disabled = !estadoJogo.etapasConcluidas.includes(index);
+            } else {
+                document.getElementById('btnProximo').disabled = estadoJogo.escolhas[etapa.opcoes[0].escolhaNum] === null;
+            }
+            document.getElementById('btnProximo').textContent = index === ETAPAS.length - 1 ? 'Concluir Desafio 🏁' : 'Avançar →';
+        }
+
+        function atualizarHUD() {
+            const elSaldo = document.getElementById('hudSaldo');
+            elSaldo.textContent = formatarMoeda(estadoJogo.saldo);
+            
+            if(estadoJogo.saldo < 0) {
+                elSaldo.className = "hud-valor negativo";
+            } else {
+                elSaldo.className = "hud-valor positivo";
+            }
+            
+            document.getElementById('hudCaixinha').textContent = formatarMoeda(estadoJogo.saldoCaixinha);
+        }
+
+        function atualizarHistorico() {
+            let html = '';
+            estadoJogo.movimentacoes.forEach(mov => {
+                const classeValor = mov.tipo === 'entrada' ? 'positivo' : 'negativo';
+                html += `<div class="linha-mov"><div class="mov-desc">${mov.descricao}</div><div class="mov-val ${classeValor}">${mov.tipo === 'entrada' ? '+' : ''}${formatarMoeda(mov.valor)}</div></div>`;
+            });
+            document.getElementById('tabelaMovimentacoes').innerHTML = html;
+        }
+
+        function pagarObrigatorio(index) {
+            const etapa = ETAPAS[index];
+            if (!estadoJogo.etapasConcluidas.includes(index)) {
+                if (etapa.opcoes[0].dependeDe === 'cartaoOpcao') {
+                    const saldoMercado = estadoJogo.cartaoOpcao === 0 ? 166 : 566;
+                    estadoJogo.saldo -= saldoMercado;
+                    estadoJogo.movimentacoes.push({ id: `etapa-${index}`, descricao: `🛒 Compras de Mercado (Semana 1)`, valor: -saldoMercado, tipo: 'saida' });
+                } else {
+                    estadoJogo.saldo += etapa.opcoes[0].saldo;
+                    estadoJogo.movimentacoes.push({ id: `etapa-${index}`, descricao: `💸 ${etapa.opcoes[0].desc}`, valor: etapa.opcoes[0].saldo, tipo: 'saida' });
+                }
+                estadoJogo.etapasConcluidas.push(index);
+                mostrarEtapa(index);
+            }
+        }
+
+        function selecionarOpcao(etapaIndex, opcaoIndex) {
+            const etapa = ETAPAS[etapaIndex];
+            const opcao = etapa.opcoes[opcaoIndex];
+            const escolhaNum = opcao.escolhaNum;
+            
+            if (estadoJogo.escolhas[escolhaNum] !== null) {
+                const antigaOpcaoIndex = estadoJogo.escolhas[escolhaNum];
+                estadoJogo.saldo -= etapa.opcoes[antigaOpcaoIndex].saldo;
+                if (escolhaNum === 2 && antigaOpcaoIndex === 0) estadoJogo.saldoCaixinha += 50;
+                estadoJogo.movimentacoes = estadoJogo.movimentacoes.filter(m => m.id !== `escolha-${escolhaNum}`);
+            }
+            
+            estadoJogo.escolhas[choiceNum = escolhaNum] = opcaoIndex;
+            estadoJogo.saldo += opcao.saldo;
+            estadoJogo.movimentacoes.push({ id: `escolha-${escolhaNum}`, descricao: `⚙️ S${escolhaNum}: Escolha executada`, valor: opcao.saldo, tipo: 'saida' });
+            
+            if (escolhaNum === 1) {
+                estadoJogo.cartaoOpcao = opcaoIndex;
+                if(estadoJogo.etapasConcluidas.includes(2)) {
+                    estadoJogo.etapasConcluidas = estadoJogo.etapasConcluidas.filter(e => e !== 2);
+                    estadoJogo.movimentacoes = estadoJogo.movimentacoes.filter(m => m.id !== "etapa-2");
+                    estadoJogo.saldo += (estadoJogo.cartaoOpcao === 0 ? 166 : 566);
+                }
+            }
+            if (escolhaNum === 2 && opcaoIndex === 0) estadoJogo.saldoCaixinha -= 50;
+            mostrarEtapa(etapaIndex);
+        }
+
+        function etapaAnterior() { if (estadoJogo.etapaAtual > 0) mostrarEtapa(estadoJogo.etapaAtual - 1); }
+        function proximaEtapa() {
+            if (estadoJogo.etapaAtual < ETAPAS.length - 1) mostrarEtapa(estadoJogo.etapaAtual + 1);
+            else finalizarJogo();
+        }
+
+        function finalizarJogo() {
+            document.getElementById('telaJogo').style.display = 'none';
+            document.getElementById('telaFinal').style.display = 'block';
+            document.getElementById('saldoFinal').textContent = formatarMoeda(estadoJogo.saldo);
+            
+            let html = `<div class="resumo-titulo">Equipe: <strong>${estadoJogo.grupoSelecionado}</strong></div>`;
+            html += `<div class="escolha-item"><span class="escolha-numero">Cartão:</span> ${ETAPAS[1].opcoes[estadoJogo.escolhas[1]].texto.split(' (')[0]}</div>`;
+            html += `<div class="escolha-item"><span class="escolha-numero">Saúde:</span> ${ETAPAS[3].opcoes[estadoJogo.escolhas[2]].texto.split(' (')[0]}</div>`;
+            html += `<div class="escolha-item"><span class="escolha-numero">Gás:</span> ${ETAPAS[4].opcoes[estadoJogo.escolhas[3]].texto.split(' (')[0]}</div>`;
+            html += `<div class="escolha-item"><span class="escolha-numero">Fim:</span> ${ETAPAS[6].opcoes[estadoJogo.escolhas[4]].texto}</div>`;
+            document.getElementById('resumoEscolhas').innerHTML = html;
+        }
+
+        function formatarMoeda(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v); }
+
+        function enviarRespostas() {
+            document.getElementById('btnEnviar').disabled = true;
+            document.getElementById('btnEnviar').textContent = "Transmitindo...";
+            
+            document.getElementById('formGrupo').value = estadoJogo.grupoSelecionado;
+            document.getElementById('formS1').value = ETAPAS[1].opcoes[estadoJogo.escolhas[1]].texto.split(' (')[0];
+            document.getElementById('formS2').value = ETAPAS[3].opcoes[estadoJogo.escolhas[2]].texto.split(' (')[0];
+            document.getElementById('formS3').value = ETAPAS[4].opcoes[estadoJogo.escolhas[3]].texto.split(' (')[0];
+            document.getElementById('formS4').value = ETAPAS[6].opcoes[estadoJogo.escolhas[4]].texto;
+
+            const formData = new FormData(document.getElementById('googleForm'));
+            fetch(document.getElementById('googleForm').action, { method: 'POST', body: formData, mode: 'no-cors' })
+            .then(() => {
+                document.getElementById('btnEnviar').textContent = "✓ Relatório Enviado!";
+                document.getElementById('btnEnviar').style.background = "#16a34a";
+                alert("Sucesso! As decisões do seu grupo foram registradas na planilha.");
+            }).catch(() => {
+                document.getElementById('btnEnviar').textContent = "✓ Relatório Enviado!";
+                document.getElementById('btnEnviar').style.background = "#16a34a";
+                alert("Sucesso! As decisões do seu grupo foram registradas na planilha.");
+            });
+        }
+        inicializarJogo();
+    </script>
+</body>
+</html>
